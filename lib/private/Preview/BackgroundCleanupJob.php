@@ -86,8 +86,7 @@ class BackgroundCleanupJob extends TimedJob {
 		$qb->selectDistinct('a.name')
 			->from('filecache', 'a')
 			->leftJoin('a', 'filecache', 'b', $qb->expr()->eq(
-				$qb->expr()->castColumn('a.name', IQueryBuilder::PARAM_INT),
-				$qb->expr()->castColumn('b.fileid', IQueryBuilder::PARAM_INT)
+				$qb->expr()->castColumn('a.name', IQueryBuilder::PARAM_INT), 'b.fileid'
 			))
 			->leftJoin('a', 'filecache', 'c', $qb->expr()->eq(
 				'a.fileid', 'c.parent'
