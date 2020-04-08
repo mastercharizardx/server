@@ -97,7 +97,8 @@ class BackgroundCleanupJob extends TimedJob {
 					$qb->expr()->isNull('b.fileid'),
 					$qb->expr()->eq('a.parent', $qb->createNamedParameter($this->previewFolder->getId())),
 					$qb->expr()->eq('a.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory'))),
-					$qb->expr()->neq('c.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory')))
+					$qb->expr()->neq('c.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory'))),
+					$qb->expr()->notLike('a.name', $qb->createNamedParameter('%[a-f]%'))
 				)
 			);
 
