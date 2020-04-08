@@ -82,11 +82,24 @@ class BackgroundCleanupJob extends TimedJob {
 	}
 
 	private function getOldPreviewLocations(): \Iterator {
+
 		$qb = $this->connection->getQueryBuilder();
+		$qbSub = $this->connection->getQueryBuilder();
+
+		$qbSub->select('name')
+			->from('filecache')
+			->where(
+				$qb->expr()->andX(
+					$qb->expr()->eq('parent', $qb->createNamedParameter($this->previewFolder->getId())),
+					$qb->expr()->eq('mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory'))),
+					$qb->expr()->notLike('name', '%[a-f]%')
+				)
+			);
+
 		$qb->selectDistinct('a.name')
-			->from('filecache', 'a')
+			->from($qbSub->getSQL(), 'a')
 			->leftJoin('a', 'filecache', 'b', $qb->expr()->eq(
-				$qb->expr()->castColumn('a.name', IQueryBuilder::PARAM_INT), 'b.fileid'
+				$qb->expr()->castColumn('b.fileid', IQueryBuilder::PARAM_STR), 'a.name'
 			))
 			->leftJoin('a', 'filecache', 'c', $qb->expr()->eq(
 				'a.fileid', 'c.parent'
@@ -94,10 +107,7 @@ class BackgroundCleanupJob extends TimedJob {
 			->where(
 				$qb->expr()->andX(
 					$qb->expr()->isNull('b.fileid'),
-					$qb->expr()->eq('a.parent', $qb->createNamedParameter($this->previewFolder->getId())),
-					$qb->expr()->eq('a.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory'))),
-					$qb->expr()->neq('c.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory'))),
-					$qb->expr()->notLike('a.name', $qb->createNamedParameter('%[a-f]%'))
+					$qb->expr()->neq('c.mimetype', $qb->createNamedParameter($this->mimeTypeLoader->getId('httpd/unix-directory')))
 				)
 			);
 
